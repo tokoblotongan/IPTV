@@ -21,7 +21,7 @@
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 500px;
+            max-width: 550px;
         }
         h2 {
             text-align: center;
@@ -61,20 +61,33 @@
         .row .form-group {
             flex: 1;
         }
+        .btn-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
         button {
-            width: 100%;
+            flex: 1;
             padding: 12px;
-            background-color: #0284c7;
-            color: white;
             border: none;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
-            margin-top: 10px;
         }
-        button:hover {
+        .btn-test {
+            background-color: #eab308;
+            color: #0f172a;
+        }
+        .btn-test:hover {
+            background-color: #ca8a04;
+        }
+        .btn-convert {
+            background-color: #0284c7;
+            color: white;
+        }
+        .btn-convert:hover {
             background-color: #0369a1;
         }
     </style>
@@ -83,22 +96,22 @@
 
 <div class="container">
     <h2>⚡ IPTV Ultimate Tool v9</h2>
-    <form action="/convert" method="POST">
+    <form id="iptvForm" method="POST">
         <div class="form-group">
-            <label for="mode">Mode Converter</label>
-            <select id="mode" name="mode">
+            <label for="mode">Mode IPTV</label>
+            <select id="mode" name="mode" onchange="toggleInputs()">
                 <option value="xtream">Xtream Codes API</option>
-                <option value="mac">MAC Address (Stalker)</option>
-                <option value="raw">Raw URL (M3U/M3U8)</option>
+                <option value="mac">Mac Portal (Stalker)</option>
+                <option value="url">Raw URL (M3U/M3U8)</option>
             </select>
         </div>
 
         <div class="form-group">
-            <label for="server">Server URL</label>
+            <label for="server">Server URL / Portal URL</label>
             <input type="text" id="server" name="server" placeholder="http://domain.port" required>
         </div>
 
-        <div class="row">
+        <div id="xtreamFields" class="row">
             <div class="form-group">
                 <label for="user">Username</label>
                 <input type="text" id="user" name="user" placeholder="Username">
@@ -109,9 +122,14 @@
             </div>
         </div>
 
+        <div id="macFields" class="form-group" style="display: none;">
+            <label for="mac_address">MAC Address</label>
+            <input type="text" id="mac_address" name="mac_address" placeholder="00:1A:79:XX:XX:XX">
+        </div>
+
         <div class="row">
             <div class="form-group">
-                <label for="threads">Threads (Kecepatan)</label>
+                <label for="threads">Threads (Kecepatan Scan)</label>
                 <select id="threads" name="threads">
                     <option value="1">1 Thread</option>
                     <option value="3" selected>3 Threads</option>
@@ -128,9 +146,37 @@
             </div>
         </div>
 
-        <button type="submit">🚀 Convert ke M3U</button>
+        <div class="btn-container">
+            <button type="button" class="btn-test" onclick="submitForm('/test')">🔍 1. Tes Kode IPTV</button>
+            <button type="button" class="btn-convert" onclick="submitForm('/convert')">🚀 2. Convert ke M3U</button>
+        </div>
     </form>
 </div>
+
+<script>
+    function toggleInputs() {
+        const mode = document.getElementById('mode').value;
+        const xtreamFields = document.getElementById('xtreamFields');
+        const macFields = document.getElementById('macFields');
+
+        if (mode === 'xtream') {
+            xtreamFields.style.display = 'flex';
+            macFields.style.display = 'none';
+        } else if (mode === 'mac') {
+            xtreamFields.style.display = 'none';
+            macFields.style.display = 'block';
+        } else {
+            xtreamFields.style.display = 'none';
+            macFields.style.display = 'none';
+        }
+    }
+
+    function submitForm(endpoint) {
+        const form = document.getElementById('iptvForm');
+        form.action = endpoint;
+        form.submit();
+    }
+</script>
 
 </body>
 </html>
