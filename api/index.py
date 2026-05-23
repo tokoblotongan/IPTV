@@ -1,15 +1,6 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, Response
 import requests
-import datetime
-import random
-import re
-import csv
-import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from urllib.parse import quote, urlparse
-
-# Mematikan warning ssl requests
-requests.packages.urllib3.disable_warnings()
+import json
 
 app = Flask(__name__, template_folder='../templates')
 
@@ -17,66 +8,108 @@ app = Flask(__name__, template_folder='../templates')
 def home():
     return render_template('index.html')
 
-@app.route('/convert')
-def convert():
-    # 1. Mengambil input parameter dari URL browser secara dinamis
-    # Contoh penggunaan link: https://iptv-eosin-omega.vercel.app/convert?url=http://contoh.com:8080&user=username_anda&pass=password_anda
-    server_url = request.args.get('url')
-    username = request.args.get('user')
-    password = request.args.get('pass')
+# ==========================================
+# 1. FUNGSI UTAMA: TES KODE IPTV (TOMBOL 1)
+# ==========================================
+@app.route('/test', methods=['POST'])
+def test_code():
+    mode = request.form.get('mode')
+    server = request.form.get('server', '').strip().rstrip('/')
     
-    if not all([server_url, username, password]):
-        return jsonify({
-            "error": "Gagal! Parameter 'url', 'user', dan 'pass' wajib diisi di dalam link URL."
-        }), 400
+    # --- PENGUJIAN MODE XTREAM CODES ---
+    if mode == 'xtream':
+        username = request.form.get('user', '').strip()
+        password = request.form.get('pass', '').strip()
         
-    try:
-        # 2. Membersihkan format URL server
-        server_url = server_url.rstrip('/')
-        
-        # 3. Jalur API Xtremecodes untuk mengambil semua data live stream
-        # (Silakan sesuaikan endpoint ini dengan logika asli dari Google Colab Anda)
-        action_url = f"{server_url}/player_api.php?username={username}&password={password}&action=get_live_streams"
-        
-        response = requests.get(action_url, timeout=15, verify=False)
-        
-        if response.status_code != 200:
-            return f"Error: Server Xtremecodes merespon dengan kode {response.status_code}", 500
+        if not username or not password:
+            return jsonify({"status": "error", "message": "Username dan Password wajib diisi untuk mode Xtream!"}), 400
             
-        data_streams = response.json()
-        
-        # Jika respon berupa dict error dari Xtremecodes
-        if isinstance(data_streams, dict) and data_streams.get('user_info', {}).get('auth') == 0:
-            return "Error: Autentikasi Xtremecodes gagal (Username atau Password salah).", 401
-            
-        # 4. Proses menyusun isi File M3U
-        m3u_lines = ["#EXTM3U"]
-        
-        for stream in data_streams:
-            # Mengambil data nama, id, dan kategori saluran
-            name = stream.get('name', 'Unknown Channel')
-            stream_id = stream.get('stream_id')
-            category_id = stream.get('category_id', '')
-            ext = stream.get('container_extension', 'ts')
-            
-            if stream_id:
-                # Membuat link stream lurus untuk player IPTV
-                stream_link = f"{server_url}/{username}/{password}/{stream_id}.{ext}"
+        test_url = f"{server}/player_api.php?username={username}&password={password}"
+        try:
+            response = requests.get(test_url, timeout=7)
+            if response.status_code == 200:
+                data = response.json()
+                user_info = data.get('user_info', {})
+                auth = user_info.get('auth', 0)
+                status = user_info.get('status', '')
                 
-                # Menyusun baris tag M3U standar
-                m3u_lines.append(f'#EXTINF:-1 tvg-id="" tvg-name="{name}" group-title="{category_id}",{name}')
-                m3u_lines.append(stream_link)
-                
-        # Menggabungkan seluruh baris menjadi satu string teks utuh
-        full_m3u_content = "\n".join(m3u_lines)
+                if auth == 1 and status == 'Active':
+                    exp_date = user_info.get('exp_date')
+                    max_conn = user_info.get('max_connections', 1)
+                    return jsonify({
+                        "status": "success",
+                        "message": f"✅ KODE VALID! Status: {status} | Max Connections: {max_conn} | Exp Date Timestamp: {exp_date}"
+                    })
+                else:
+                    return jsonify({"status": "failed", "message": f"❌ Kode ditolak oleh server. Status: {status or 'Tidak Diketahui'}"})
+            else:
+                return jsonify({"status": "error", "message": f" Server merespons dengan HTTP {response.status_code}"})
+        except Exception as e:
+            return jsonify({"status": "error", "message": f" Gagal terhubung ke server: {str(e)}"})
+
+    # --- PENGUJIAN MODE MAC PORTAL (STALKER) ---
+    elif mode == 'mac':
+        mac = request.form.get('mac_address', '').strip()
+        if not mac:
+            return jsonify({"status": "error", "message": "MAC Address wajib diisi untuk mode Stalker!"}), 400
+            
+        # Menggunakan handshake awal Stalker Portal
+        handshake_url = f"{server}/portal.php?type=stb&action=handshake"
+        headers = {'User-Agent': 'Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/533.3 (KHTML, like Gecko) MAG200 stbapp ver: 2 rev: 250 Safari/533.3'}
+        try:
+            res = requests.get(handshake_url, headers=headers, timeout=7)
+            if res.status_code == 200:
+                return jsonify({
+                    "status": "success",
+                    "message": f"✅ PORTAL MERESPONS! Handshake berhasil dijalankan pada {server}. Jalur Mac siap diproses."
+                })
+            else:
+                return jsonify({"status": "failed", "message": f"❌ Portal ada namun memberikan respons HTTP {res.status_code}"})
+        except Exception as e:
+            return jsonify({"status": "error", "message": f" Gagal terhubung ke Mac Portal: {str(e)}"})
+
+    # --- PENGUJIAN MODE RAW URL M3U ---
+    elif mode == 'url':
+        try:
+            res = requests.head(server, timeout=7, allow_redirects=True)
+            if res.status_code == 200:
+                return jsonify({"status": "success", "message": "✅ URL AKTIF! Link M3U/M3U8 merespons dengan status 200 OK."})
+            else:
+                return jsonify({"status": "failed", "message": f"❌ Link mengembalikan respons HTTP {res.status_code}"})
+        except Exception as e:
+            return jsonify({"status": "error", "message": f" Gagal memverifikasi URL: {str(e)}"})
+
+    return jsonify({"status": "error", "message": "Mode tidak dikenal!"}), 400
+
+# ==========================================
+# 2. FUNGSI UTAMA: CONVERT KE M3U (TOMBOL 2)
+# ==========================================
+@app.route('/convert', methods=['POST'])
+def convert_m3u():
+    mode = request.form.get('mode')
+    server = request.form.get('server', '').strip().rstrip('/')
+    
+    # Simulasi pembuatan string teks berformat #EXTM3U
+    m3u_content = "#EXTM3U\n"
+    
+    if mode == 'xtream':
+        username = request.form.get('user', '').strip()
+        password = request.form.get('pass', '').strip()
+        m3u_content += f"#EXTINF:-1,Channel Contoh (Xtream)\n{server}/live/{username}/{password}/1.ts\n"
+        filename = "xtream_channels.m3u"
         
-        # 5. Mengirimkan hasil langsung sebagai file teks M3U ke browser / aplikasi player
-        return full_m3u_content, 200, {
-            'Content-Type': 'text/plain; charset=utf-8',
-            'Content-Disposition': 'inline; filename="playlist.m3u"'
-        }
+    elif mode == 'mac':
+        mac = request.form.get('mac_address', '').strip()
+        m3u_content += f"#EXTINF:-1,Channel Contoh (Stalker MAC)\n{server}/portal.php?type=stb&action=get_ordered_channels&mac={mac}\n"
+        filename = "stalker_channels.m3u"
         
-    except requests.exceptions.RequestException as e:
-        return f"Error koneksi ke server Xtremecodes: {str(e)}", 500
-    except Exception as e:
-        return f"Terjadi kesalahan internal server: {str(e)}", 500
+    else:
+        m3u_content += f"#EXTINF:-1,Channel Contoh (Raw URL)\n{server}\n"
+        filename = "converted_channels.m3u"
+        
+    # Mengirimkan response balik berupa file download mentah ke browser pengguna
+    return Response(
+        m3u_content,
+        mimetype="audio/x-mpegurl",
+        headers={"Content-disposition": f"attachment; filename={filename}"}
+    )
