@@ -1,7 +1,15 @@
-from flask import Flask, jsonify, request, Response
-import requests
+from flask import Flask, jsonify, request, Response, render_template
 
 app = Flask(__name__, template_folder='../templates')
+
+# Tambahkan ini untuk debug
+@app.route('/debug')
+def debug():
+    return jsonify({
+        "status": "ok",
+        "message": "Flask berjalan di Vercel",
+        "routes": ["/", "/test", "/convert"]
+    })
 
 # ==================== HEADERS UNTUK STALKER ====================
 def get_stalker_headers(mac):
