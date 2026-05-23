@@ -38,7 +38,7 @@ def test():
         mac = data.get('mac') or data.get('mac_address')
         
         if not portal or not mac:
-            return jsonify({"status": "error", "message": "portal dan mac wajib diisi"}), 400
+            return jsonify({"status": "error", "message": "Portal dan MAC wajib diisi"}), 400
         
         result = proxy_request(portal, "handshake", mac, {"type": "stb"})
         return jsonify(result)
