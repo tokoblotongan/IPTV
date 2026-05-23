@@ -3,23 +3,12 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python",
-      "config": {
-        "maxDuration": 60
-      }
+      "config": { "maxDuration": 60 }
     }
   ],
   "routes": [
-    {
-      "src": "/test",
-      "dest": "/api/index.py"
-    },
-    {
-      "src": "/api/test",
-      "dest": "/api/index.py"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
+    { "src": "/test", "dest": "/api/index.py" },
+    { "src": "/api/test", "dest": "/api/index.py" },
+    { "src": "/(.*)", "dest": "/api/index.py" }
   ]
 }
