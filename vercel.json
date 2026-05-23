@@ -4,14 +4,33 @@
       "src": "api/proxy.py",
       "use": "@vercel/python",
       "config": {
-        "maxDuration": 45
+        "maxDuration": 60
       }
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/api/proxy.py"
+      "source": "/(.*)",
+      "destination": "/api/proxy.py"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET,POST,OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type"
+        }
+      ]
     }
   ]
 }
