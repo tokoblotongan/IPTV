@@ -3,34 +3,12 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python",
-      "config": {
-        "maxDuration": 60
-      }
+      "config": { "maxDuration": 60 }
     }
   ],
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/index.py"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type"
-        }
-      ]
-    }
+  "routes": [
+    { "src": "/api/test", "dest": "/api/index.py" },
+    { "src": "/api/convert", "dest": "/api/index.py" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
