@@ -3,12 +3,14 @@
     {
       "src": "api/proxy.py",
       "use": "@vercel/python",
-      "config": { "maxDuration": 45 }
+      "config": {
+        "maxDuration": 45
+      }
     }
   ],
   "routes": [
     {
-      "src": "/api/proxy",
+      "src": "/(.*)",
       "dest": "/api/proxy.py"
     }
   ]
