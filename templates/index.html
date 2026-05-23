@@ -1,1 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPTV Ultimate Tool v9</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121824;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #1e293b;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 500px;
+        }
+        h2 {
+            text-align: center;
+            color: #38bdf8;
+            margin-bottom: 25px;
+            font-size: 24px;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #475569;
+            background-color: #0f172a;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 15px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+        .row {
+            display: flex;
+            gap: 15px;
+        }
+        .row .form-group {
+            flex: 1;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #0284c7;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0369a1;
+        }
+    </style>
+</head>
+<body>
 
+<div class="container">
+    <h2>⚡ IPTV Ultimate Tool v9</h2>
+    <form action="/convert" method="POST">
+        <div class="form-group">
+            <label for="mode">Mode Converter</label>
+            <select id="mode" name="mode">
+                <option value="xtream">Xtream Codes API</option>
+                <option value="mac">MAC Address (Stalker)</option>
+                <option value="raw">Raw URL (M3U/M3U8)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="server">Server URL</label>
+            <input type="text" id="server" name="server" placeholder="http://domain.port" required>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label for="user">Username</label>
+                <input type="text" id="user" name="user" placeholder="Username">
+            </div>
+            <div class="form-group">
+                <label for="pass">Password</label>
+                <input type="password" id="pass" name="pass" placeholder="Password">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="form-group">
+                <label for="threads">Threads (Kecepatan)</label>
+                <select id="threads" name="threads">
+                    <option value="1">1 Thread</option>
+                    <option value="3" selected>3 Threads</option>
+                    <option value="5">5 Threads</option>
+                    <option value="10">10 Threads</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="scan">Metode Scan</label>
+                <select id="scan" name="scan">
+                    <option value="sample">Sample (Cepat)</option>
+                    <option value="full">FULL (Semua Channel)</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit">🚀 Convert ke M3U</button>
+    </form>
+</div>
+
+</body>
+</html>
