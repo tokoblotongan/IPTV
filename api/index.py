@@ -25,6 +25,7 @@ def proxy_request(portal, action, mac, extra_params=None):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+# ROUTE UTAMA (PENTING!)
 @app.route('/test', methods=['POST'])
 @app.route('/api/test', methods=['POST'])
 def test():
