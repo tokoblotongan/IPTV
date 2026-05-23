@@ -25,22 +25,25 @@ def proxy_request(portal, action, mac, extra_params=None):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@app.route('/test', methods=['POST'])
 @app.route('/api/test', methods=['POST'])
 def test():
-    data = request.get_json() or request.form.to_dict()
-    portal = data.get('portal') or data.get('server')
-    mac = data.get('mac') or data.get('mac_address')
-    
-    if not portal or not mac:
-        return jsonify({"status": "error", "message": "portal dan mac wajib diisi"}), 400
-    
-    result = proxy_request(portal, "handshake", mac, {"type": "stb"})
-    return jsonify(result)
-
-@app.route('/api/convert', methods=['POST'])
-def convert():
-    # Untuk sementara kita pakai test dulu
-    return jsonify({"status": "info", "message": "Convert akan dibuat nanti"})
+    try:
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
+        
+        portal = data.get('portal') or data.get('server')
+        mac = data.get('mac') or data.get('mac_address')
+        
+        if not portal or not mac:
+            return jsonify({"status": "error", "message": "portal dan mac wajib diisi"}), 400
+        
+        result = proxy_request(portal, "handshake", mac, {"type": "stb"})
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
