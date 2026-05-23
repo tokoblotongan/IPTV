@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import requests
 import datetime
 import random
@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "API IPTV Ultimate Tool v9 Berhasil Berjalan di Vercel!"
+    return render_template('index.html')
 
 @app.route('/convert')
 def convert():
