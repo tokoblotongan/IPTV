@@ -5,102 +5,114 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IPTV Ultimate Tool</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #3b82f6;
+    --green: #10b981;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: #0a0e1a;
-    color: #e2e8f0;
-    font-family: system-ui, -apple-system, sans-serif;
-    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
     padding: 20px;
   }
-  .container {
-    max-width: 900px;
-    margin: 0 auto;
-  }
-  h1 { color: #3b82f6; }
+  .wrap { max-width: 860px; margin: 0 auto; }
   .card {
-    background: #1a2235;
-    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
     padding: 20px;
     margin-bottom: 20px;
   }
   input, select, button {
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 8px;
-    border: 1px solid #334155;
-    background: #0f172a;
-    color: white;
     width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
   }
   button {
-    background: #3b82f6;
+    background: var(--accent);
+    color: white;
+    font-weight: 700;
     cursor: pointer;
-    font-weight: bold;
   }
   button:hover { background: #2563eb; }
-  .log {
+  .log-box {
     background: #020617;
+    border: 1px solid var(--border);
+    border-radius: 10px;
     padding: 15px;
-    border-radius: 8px;
-    font-family: monospace;
-    max-height: 300px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    max-height: 400px;
     overflow-y: auto;
     margin-top: 10px;
   }
-  .success { color: #22c55e; }
-  .error { color: #ef4444; }
+  .log-ok { color: var(--green); }
+  .log-err { color: var(--red); }
 </style>
 </head>
 <body>
-<div class="container">
+<div class="wrap">
 
-  <h1>⚡ IPTV Ultimate Tool</h1>
-  <p>Backend Proxy Active - Mengatasi HTTP 461</p>
+  <h1 style="text-align:center; margin-bottom:10px;">IPTV Ultimate Tool</h1>
+  <p style="text-align:center; color:var(--muted);">Proxy Backend Active - Mengatasi 461</p>
 
-  <!-- MAC PORTAL SECTION -->
+  <!-- MAC PORTAL -->
   <div class="card">
-    <h2>📺 MAC Portal Test</h2>
-    <div>
-      <label>Portal URL</label>
-      <input type="text" id="mac-portal" value="http://line.glantv.com:80/c" placeholder="http://domain.com:port/c">
-    </div>
-    <div>
-      <label>MAC Address</label>
-      <input type="text" id="mac-address" value="00:1A:79:64:25:54" placeholder="00:1A:79:XX:XX:XX">
-    </div>
-    <button onclick="testMacPortal()">🔍 Test MAC Portal via Proxy</button>
+    <h2>📺 MAC Portal</h2>
+    <input type="text" id="mac-portal" value="http://line.glantv.com:80/c" placeholder="Portal URL">
+    <input type="text" id="mac-addr" value="00:1A:79:64:25:54" placeholder="MAC Address (00:1A:79:XX:XX:XX)">
+    
+    <button onclick="runMacScan()">🔍 Test MAC Portal (via Proxy)</button>
+    
+    <div class="log-box" id="mac-log"></div>
   </div>
-
-  <div class="log" id="log-output"></div>
 
 </div>
 
 <script>
-// ==================== HELPER ====================
-function log(msg, type = '') {
-  const logEl = document.getElementById('log-output');
-  const time = new Date().toLocaleTimeString();
-  let colorClass = '';
-  if (type === 'success') colorClass = 'success';
-  if (type === 'error') colorClass = 'error';
-  
-  logEl.innerHTML += `<div>[${time}] <span class="${colorClass}">${msg}</span></div>`;
-  logEl.scrollTop = logEl.scrollHeight;
+// ==================== LOG HELPER ====================
+function log(id, msg, cls='') {
+  const el = document.getElementById(id);
+  const line = document.createElement('div');
+  line.className = cls;
+  line.textContent = msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
 }
 
-log('🚀 IPTV Ultimate Tool siap. Proxy aktif.', 'success');
+function logClear(id) {
+  document.getElementById(id).innerHTML = '';
+}
 
 // ==================== TEST MAC VIA PROXY ====================
-async function testMacPortal() {
-  const portal = document.getElementById('mac-portal').value.trim();
-  const mac = document.getElementById('mac-address').value.trim().toUpperCase();
+async function runMacScan() {
+  const portal = document.getElementById('mac-portal').value.trim().replace(/\/+$/, '');
+  const mac = document.getElementById('mac-addr').value.trim().toUpperCase();
 
   if (!portal || !mac) {
-    log('❌ Portal URL dan MAC Address wajib diisi!', 'error');
+    alert('Portal URL dan MAC Address wajib diisi!');
     return;
   }
 
-  log('🔄 Menghubungi Vercel Proxy...', '');
+  logClear('mac-log');
+  log('mac-log', '🔄 Menghubungi Vercel Proxy...', 'log-ok');
 
   try {
     const formData = new FormData();
@@ -116,14 +128,15 @@ async function testMacPortal() {
     const result = await response.json();
 
     if (result.status === 'success') {
-      log(`✅ ${result.message}`, 'success');
+      log('mac-log', `✅ ${result.message}`, 'log-ok');
+      log('mac-log', 'Proxy berhasil mengakses portal!', 'log-ok');
     } else {
-      log(`❌ ${result.message || 'Gagal terhubung'}`, 'error');
+      log('mac-log', `❌ ${result.message || 'Gagal'}`, 'log-err');
     }
 
-  } catch (err) {
-    log(`❌ Network Error: ${err.message}`, 'error');
-    log('⚠️ Pastikan sudah redeploy setelah update vercel.json', '');
+  } catch (e) {
+    log('mac-log', `❌ Network Error: ${e.message}`, 'log-err');
+    log('mac-log', 'Cek apakah sudah redeploy terbaru?', '');
   }
 }
 </script>
