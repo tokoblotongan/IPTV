@@ -1,9 +1,9 @@
-from flask import Flask, jsonify, request, Response, render_template
+from flask import Flask, request, jsonify
 import requests
 
-app = Flask(__name__, template_folder='../templates')
+app = Flask(__name__)
 
-def get_stalker_headers(mac):
+def get_headers(mac):
     return {
         "User-Agent": "Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/533.3 (KHTML, like Gecko) MAG200 stbapp ver: 2 rev: 250 Safari/533.3",
         "X-User-Agent": "Model: MAG200; Link: Ethernet",
@@ -11,13 +11,12 @@ def get_stalker_headers(mac):
         "Accept": "*/*",
     }
 
-def proxy_portal_request(portal, action, mac, extra_params=None):
+def proxy_request(portal, action, mac, extra_params=None):
     if extra_params is None:
         extra_params = {}
-    
     url = f"{portal.rstrip('/')}/portal.php"
     params = {"action": action, "JsHttpRequest": "1-xml", **extra_params}
-    headers = get_stalker_headers(mac)
+    headers = get_headers(mac)
     
     try:
         r = requests.get(url, params=params, headers=headers, timeout=15)
@@ -26,30 +25,22 @@ def proxy_portal_request(portal, action, mac, extra_params=None):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-@app.route('/')
-def home():
-    return render_template('index.html')
-
-@app.route('/test', methods=['POST'])
-def test_code():
-    mode = request.form.get('mode')
-    server = request.form.get('server', '').strip().rstrip('/')
+@app.route('/api/test', methods=['POST'])
+def test():
+    data = request.get_json() or request.form.to_dict()
+    portal = data.get('portal') or data.get('server')
+    mac = data.get('mac') or data.get('mac_address')
     
-    if mode == 'mac':
-        mac = request.form.get('mac_address', '').strip().upper()
-        if not mac:
-            return jsonify({"status": "error", "message": "MAC wajib diisi"}), 400
-            
-        result = proxy_portal_request(server, "handshake", mac, {"type": "stb"})
-        
-        if "error" not in str(result):
-            return jsonify({"status": "success", "message": "✅ Handshake berhasil!"})
-        else:
-            return jsonify(result)
+    if not portal or not mac:
+        return jsonify({"status": "error", "message": "portal dan mac wajib diisi"}), 400
     
-    # ... (sisanya kode test xtream dan url kamu bisa ditambahkan lagi)
+    result = proxy_request(portal, "handshake", mac, {"type": "stb"})
+    return jsonify(result)
 
-    return jsonify({"status": "error", "message": "Mode tidak dikenal"}), 400
+@app.route('/api/convert', methods=['POST'])
+def convert():
+    # Untuk sementara kita pakai test dulu
+    return jsonify({"status": "info", "message": "Convert akan dibuat nanti"})
 
 if __name__ == '__main__':
     app.run(debug=True)
